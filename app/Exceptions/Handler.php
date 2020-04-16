@@ -4,6 +4,9 @@ namespace App\Exceptions;
 
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Handler extends ExceptionHandler
 {
@@ -46,6 +49,23 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
+        if (strpos($request->getRequestUri(), 'api/')) {
+            if ($exception instanceof ModelNotFoundException) {
+                return response()->json([
+                    'error' => ['message' => 'Resource Item Not Found']
+                ], 404);
+            }
+            if ($exception instanceof NotFoundHttpException) {
+                return response()->json([
+                    'error' => ['message' => '404 Not Found']
+                ], 404);
+            }
+            if ($exception instanceof MethodNotAllowedHttpException) {
+                return response()->json([
+                    'error' => ['message' => 'Request Method not Allowed in this route']
+                ], 405);
+            }
+        }
         return parent::render($request, $exception);
     }
 }
